@@ -16,6 +16,7 @@ void setup()
 {
   Serial.begin(9600);
   pinMode(tiltSwIn, INPUT);
+  pinMode(3, OUTPUT);
 }
  
 void loop()
@@ -28,6 +29,7 @@ void loop()
   if (newTiltState != tiltState)
   {
     cycleTilt++;
+    delay(2.5);
   }
   cycleTotal++;
   tiltState = newTiltState;
@@ -37,10 +39,10 @@ void loop()
     cycleTilt = 0;
     cycleTotal = 0;
   }
-  else if (cycleTilt > 6 && shakeCooldown == 0)
+  else if (cycleTilt > 20 && shakeCooldown == 0)
   {
     eraseLastBit = true;
-    shakeCooldown = 30000;
+    shakeCooldown = 20000;
     cycleTilt = 0;
     cycleTotal = 0;
   }
@@ -51,6 +53,19 @@ void loop()
     if (bufferIndex > 0) 
     {
       bufferIndex--; // tocuh grass 
+      digitalWrite(3, HIGH);
+      delay(100);
+      digitalWrite(3, LOW);
+    }
+    else 
+    {
+      digitalWrite(3, HIGH);
+      delay(100);
+      digitalWrite(3, LOW);
+      delay(100);
+      digitalWrite(3, HIGH);
+      delay(100);
+      digitalWrite(3, LOW);
     }
   }
   else
