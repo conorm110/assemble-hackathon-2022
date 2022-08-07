@@ -1,140 +1,134 @@
-#define joystick 0
-#define tiltSwIn 2 
-#define buzzer 3
-#define status_led 4
-
 #include <Servo.h>
 
-Servo myservo;  // create servo object to control a servo
-     
-bool tiltState = false;
+#define joystick 0
+#define tilt_switch_in 2 
+#define buzzer 3
+#define status_led 4
+#define servo_pin 9
 
-int cycleTotal = 0;
-double cycleTilt = 0;
-
-int pos = 0;
-
-int shakeCooldown = 0;
-
-short joystickState = 0; // 0 idle, 1 is 0b, 2 is 1b, 
-char on = '1';
-char off = '0';
-
-int bufferIndex = 0;
-char bufferKeys[] = "01001000"; // will be rewritten
+Servo servo_arm;
 
 void setup() {
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
   Serial.begin(9600);
-  pinMode(tiltSwIn, INPUT);
+  
+  servo_arm.attach(servo_pin);
+  pinMode(tilt_switch_in, INPUT);
   pinMode(buzzer, OUTPUT);
   pinMode(status_led, OUTPUT);
 }
- 
- void loop() {
-  if (bufferIndex == 0)
-  {
-    digitalWrite(status_led, HIGH);
-  }
-  else
-  {
-    digitalWrite(status_led, LOW);
-  }
-  if(shakeCooldown > 0){
-    shakeCooldown--;
-  }
-  
-  bool eraseLastBit = false;
-  bool newTiltState = digitalRead(tiltSwIn);
-  
-  if(newTiltState != tiltState) {
-    cycleTilt++;
-    delay(3.5);
-  }
-  
-  cycleTotal++;
-  tiltState = newTiltState; // questionable
-  
-  if(cycleTotal > 10000) {
-    // no shak
-    cycleTilt = 0;
-    cycleTotal = 0;
-  } else if(cycleTilt > 6 && shakeCooldown == 0) {
-    eraseLastBit = true;
-    shakeCooldown = 1;
-    cycleTilt = 0;
-    cycleTotal = 0;
-  }
-
-  if (cycleTilt > 0.1){
-    cycleTilt = cycleTilt - 0.01;
-  }
 
 
-  if(eraseLastBit) {
-    if(bufferIndex > 0) { //
-      bufferIndex--; // tocuh grass 
-      digitalWrite(buzzer, HIGH);
-      delay(100);
-      digitalWrite(buzzer, LOW);
-    } else {
-      digitalWrite(buzzer, HIGH);
-      delay(100);
-      digitalWrite(buzzer, LOW);
-      delay(100);
-      digitalWrite(buzzer, HIGH);
-      delay(100);
-      digitalWrite(buzzer, LOW);
+int tilt_switch_interval = 2;
+unsigned long previous_tilt_millis = 0;
+double shake_size = 0.0;
+double shake_decay_rate = 0.5;
+double shake_thresh = 5.0;
+double shake_max = 30.0;
+bool shake_en_last = false;
+bool check_if_shaking() {
+  unsigned long current_tilt_millis = millis();
+  if (current_tilt_millis - previous_tilt_millis >= tilt_switch_interval) {
+    // this code should run every 2ms but im bad at timing so im not sure sorry best
+    previous_tilt_millis = current_tilt_millis;
+    
+    if (digitalRead(tilt_switch_in) && shake_size < shake_max) {
+      shake_size++;
     }
-  } else {
-    short newState = 0;
-    int joystickVoltage = analogRead(joystick);
-    if(joystickVoltage > 700) {
-      newState = 2; // 1 in binary
-    } else if(joystickVoltage < 200) {
-      newState = 1;
+
+    if (shake_size > shake_decay_rate) {
+      shake_size -= shake_decay_rate;
+    }
+
+    if (shake_size > shake_thresh) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+unsigned long previous_erase_millis = 0;
+const int erase_switch_interval = 700;
+bool handle_shaking() {
+  unsigned long current_erase_millis = millis();
+  bool erase_last_bit = false;
+  if (!shake_en_last) {
+    shake_en_last = check_if_shaking();
+    erase_last_bit = shake_en_last;
+  } else if (current_erase_millis - previous_erase_millis >= erase_switch_interval){
+    previous_erase_millis = current_erase_millis;
+    shake_en_last = false;
+  }
+  return erase_last_bit;
+}
+
+short ascii_buffer_index = 0;
+char ascii_buffer[] = "01001000"; // will be overwritten
+short joystick_state = 0; // 0 idle, 1 is 0b, 2 is 1b
+
+unsigned long previous_loop_millis = 0;
+const long interval_loop = 30;
+
+void loop() {
+  unsigned long current_loop_millis = millis();
+  if (current_loop_millis-previous_loop_millis>=interval_loop)
+  {
+    previous_loop_millis = current_loop_millis;
+    // Eyeball light lights up when waiting for first bit (MSB) of next ascii code
+    if (ascii_buffer_index == 0){
+      digitalWrite(status_led, HIGH);
     } else {
-      newState = 0;
+      digitalWrite(status_led, LOW);
     }
     
-    if(newState != joystickState) {
-      if(newState != 0) {
-        // write new thing to buffer
-        //bufferKeys[bufferIndex] = newState - 1; // TIS IS SO FUCKEd
-        if(newState == 1) {
-          bufferKeys[bufferIndex]= on;
-        } else {
-          bufferKeys[bufferIndex]= off;
-        }
-        //bufferKeys += newState - 1;
-        bufferIndex++;
+    if(handle_shaking()){
+      delay(1); // SORRY BEST IT FIXED IT OK ITS ONLY THIS ONE
+      if(ascii_buffer_index > 0) { //
+        ascii_buffer_index--;
+        digitalWrite(buzzer, HIGH);
+        delay(100);
+        digitalWrite(buzzer, LOW);
+      } else {
+        digitalWrite(buzzer, HIGH);
+        delay(100);
+        digitalWrite(buzzer, LOW);
+        delay(100);
+        digitalWrite(buzzer, HIGH);
+        delay(100);
+        digitalWrite(buzzer, LOW);
       }
-      joystickState = newState;
     }
-   
-    if(bufferIndex > 7) {
+  
+    // Code Below handles joystick
+    short joystick_new_state = 0;
+    int joystick_voltage = analogRead(joystick);
+    if(joystick_voltage > 500) {
+      joystick_new_state = 2; // 1 in binary
+    } else if(joystick_voltage < 200) {
+      joystick_new_state = 1;
+    } else {
+      joystick_new_state = 0;
+    }
+    if(joystick_new_state != joystick_state) {
+      if(joystick_new_state != 0) {
+        if(joystick_new_state == 1) {
+          ascii_buffer[ascii_buffer_index]= '1';
+        } else {
+          ascii_buffer[ascii_buffer_index]= '0';
+        }
+        ascii_buffer_index++;
+      }
+      joystick_state = joystick_new_state;
+    }
+  
+    if(ascii_buffer_index > 7) {
       char actual_char = 0; 
-      for (int bit_pos = 7; bit_pos >= 0; bit_pos--) // start from rightmost position 
-      {
-        int the_bit = bufferKeys[bit_pos] - '0'; // convert from char representation '0', '1' to 0, 1
+      for (int bit_pos = 7; bit_pos >= 0; bit_pos--) {
+        int the_bit = ascii_buffer[bit_pos] - '0'; // convert from char representation '0', '1' to 0, 1
         actual_char |= the_bit<<(7 - bit_pos); 
       }
-
       Serial.print(actual_char);
-
-      for (int i = 0; i < 3; i++){
-      for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
-        // in steps of 1 degree
-        myservo.write(pos);              // tell servo to go to position in variable 'pos'
-        delay(1);
-      }
-      for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-        myservo.write(pos);              // tell servo to go to position in variable 'pos'
-        delay(1);
-      }}
-  
- 
-      bufferIndex = 0;
+      ascii_buffer_index = 0;
     }
   }
 }
