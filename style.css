@@ -1,0 +1,189 @@
+/* Inter */             @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+/* Source Code Pro */   @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: 'Source Code Pro', 'Courier New', Courier, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: 'Source Code Pro', 'Courier New', Courier, monospace;
+}
+
+body {
+  margin: 0 auto;
+  background-color: #353535;
+  font-family: Segoe UI;
+  min-width: 600px;
+  max-width: 850px;
+}
+
+section {
+  width: 90%;
+  margin: 0 auto;
+  padding: 0.5em;
+}
+
+.main {
+  padding: 1em;
+  text-align: center;
+  color: white;
+}
+
+#timer, #restart {
+  margin: 0.2em;
+  line-height: 2.2em;
+  height: 2.2em;
+}
+
+#word-section {
+  background-color: transparent;
+  box-shadow: 0px 0px 5px #fff;
+  color: white;
+}
+
+#word-section {
+  font-size: 1.5em;
+  height: 4em;
+  line-height: 2em;
+  border-radius: 0.25em;
+  position: relative;
+  overflow: hidden;
+}
+
+#word-section > span {
+  display: inline-block;
+  margin-left: 0.2em; /* emulate spaces between words */
+  letter-spacing: 2px;
+}
+
+#type-section { 
+  text-align: center; 
+}
+
+#type-section > * {
+  font-size: 1.5em;
+  display: inline-block;
+  border-radius: 0.25em;
+  border: none;
+  color: #fff;
+  vertical-align: middle;
+}
+
+#typebox {
+  width: 64%;
+  color: white;
+  background-color: transparent;
+  padding: 0.5em;
+  box-shadow: 0px 0px 5px #fff;
+}
+
+#typebox:focus { 
+  outline: none; 
+}
+
+#timer {
+  width: 4em;
+  background-color: transparent;
+  box-shadow: 0px 0px 5px #fff;
+  color: white;
+  margin-right: 0;
+}
+
+#restart {
+  width: 2em;
+  background-color: #408799;
+  background-color: transparent;
+  box-shadow: 0px 0px 5px #fff;
+  color: white;
+}
+
+#restart > span {
+  display: inline-block;
+  transform: rotate(1.5Rad);
+  font-weight: bold;
+}
+
+#restart:hover { 
+  background-color: #408799; 
+}
+
+#restart:active { 
+  box-shadow: 1px 1px 4px #408799 inset; 
+}
+
+#results {
+  text-align: center;
+  margin: 0 1%;
+  display: block;
+}
+
+#results li { 
+  list-style: none; 
+}
+
+#results li:first-child { 
+  font-size: 1.5em; 
+}
+
+#results li:nth-child(2) {
+  font-size: 0.8em;
+  line-height: 1em;
+}
+
+#results #results-stats { 
+  font-size: 0.6em; 
+}
+
+footer {
+  margin-top: 1em;
+  text-align: center;
+  font-size: 0.8em;
+  color: white;
+}
+
+footer a {
+  color: #000;
+  text-decoration: none;
+}
+
+footer a:hover { 
+  text-decoration: underline; 
+}
+
+.magic-box {
+  position: fixed;
+  width: inherit;
+  height: 0.5em;
+  top: 54px;
+  background-color: #fff;
+}
+
+.waiting {
+  text-align: center;
+  line-height: 1.5em;
+  font-size: 3em;
+}
+
+.current-word { 
+  background-color: rgb(0, 0, 0, 0.1);
+  color: rgb(159, 91, 204);
+}
+
+.correct-word-c { 
+  color: #4c8f75; 
+}
+
+.incorrect-word-c { 
+  color: #b8565e; 
+}
+
+span {
+  color: #fff;
+}
+
+li {
+  color: #fff;
+}

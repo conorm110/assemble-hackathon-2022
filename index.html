@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+
+  <html lang="en">
+
+    <head>
+
+      <meta charset="UTF-8"/>
+
+      <title>Typing Test</title>
+
+      <link href="style.css" rel="stylesheet"/>
+
+      <link rel="icon" type="image/vnd.microsoft.icon" href="assets/favicon.ico">
+
+      <script src="script.js"></script>
+
+    </head>
+
+    <body onload="addWords()">
+
+      <div class="main" id="section1">
+
+          <br>
+          
+          <h1>typing test</h1>
+          
+          <br> <br> <br> <br> <br> <br> <br> <br> <br> <br> <br>
+        
+      </div>
+
+      <div class="typing-area-div" id="typingarea">
+
+        <section id="word-section">
+
+          <div class="waiting">⌛</div>
+    
+        </section>
+    
+        <section id="type-section">
+    
+          <input id="typebox" name="typebox" type="text" tabindex="1" autofocus onkeyup="typingTest(event)"/>
+    
+          <div id="timer" class="type-btn"><span class="timerscreenup">0:30</span></div>
+    
+          <button id="restart" class="type-btn" tabindex="2" onclick="restartTest()">
+    
+            <span id="restart-symbol">↻</span>
+    
+          </button>
+    
+        </section>
+
+      </div>
+
+    </body>
+
+  </html>

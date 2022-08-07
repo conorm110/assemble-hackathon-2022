@@ -1,11 +1,18 @@
 #define joystick 0
 #define tiltSwIn 2 
 #define buzzer 3
+#define status_led 4
+
+#include <Servo.h>
+
+Servo myservo;  // create servo object to control a servo
      
 bool tiltState = false;
 
 int cycleTotal = 0;
-int cycleTilt = 0;
+double cycleTilt = 0;
+
+int pos = 0;
 
 int shakeCooldown = 0;
 
@@ -17,12 +24,22 @@ int bufferIndex = 0;
 char bufferKeys[] = "01001000"; // will be rewritten
 
 void setup() {
+  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
   Serial.begin(9600);
   pinMode(tiltSwIn, INPUT);
   pinMode(buzzer, OUTPUT);
+  pinMode(status_led, OUTPUT);
 }
  
  void loop() {
+  if (bufferIndex == 0)
+  {
+    digitalWrite(status_led, HIGH);
+  }
+  else
+  {
+    digitalWrite(status_led, LOW);
+  }
   if(shakeCooldown > 0){
     shakeCooldown--;
   }
@@ -42,15 +59,19 @@ void setup() {
     // no shak
     cycleTilt = 0;
     cycleTotal = 0;
-  } else if(cycleTilt > 20 && shakeCooldown == 0) {
+  } else if(cycleTilt > 6 && shakeCooldown == 0) {
     eraseLastBit = true;
-    shakeCooldown = 20000;
+    shakeCooldown = 1;
     cycleTilt = 0;
     cycleTotal = 0;
   }
 
+  if (cycleTilt > 0.1){
+    cycleTilt = cycleTilt - 0.01;
+  }
+
+
   if(eraseLastBit) {
-    Serial.println("FUCKKKK");
     if(bufferIndex > 0) { //
       bufferIndex--; // tocuh grass 
       digitalWrite(buzzer, HIGH);
@@ -92,10 +113,6 @@ void setup() {
     }
    
     if(bufferIndex > 7) {
-      Serial.println("");
-      Serial.print("Incoming byte: ");
-      Serial.println(bufferKeys);
-
       char actual_char = 0; 
       for (int bit_pos = 7; bit_pos >= 0; bit_pos--) // start from rightmost position 
       {
@@ -103,8 +120,19 @@ void setup() {
         actual_char |= the_bit<<(7 - bit_pos); 
       }
 
-      Serial.print("Incoming character: ");
-      Serial.println(actual_char);
+      Serial.print(actual_char);
+
+      for (int i = 0; i < 3; i++){
+      for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+        // in steps of 1 degree
+        myservo.write(pos);              // tell servo to go to position in variable 'pos'
+        delay(1);
+      }
+      for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+        myservo.write(pos);              // tell servo to go to position in variable 'pos'
+        delay(1);
+      }}
+  
  
       bufferIndex = 0;
     }
